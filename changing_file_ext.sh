@@ -1,4 +1,4 @@
-# Script for changing file extensions.
+# This script is used to change file extensions.
 #!/bin/bash
 
 # Проверка количества аргументов
