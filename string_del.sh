@@ -1,6 +1,6 @@
-# This script is designed to select or delete a substring from a given string based on the specified start and end positions.
-
 #!/bin/bash
+
+# This script is designed to select or delete a substring from a given string based on the specified start and end positions.
 
 # Проверка количества аргументов
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
