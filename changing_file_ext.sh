@@ -1,5 +1,6 @@
-# This script is used to change file extensions.
 #!/bin/bash
+
+# This script is used to change file extensions.
 
 # Проверка количества аргументов
 if [ $# -ne 2 ]; then
