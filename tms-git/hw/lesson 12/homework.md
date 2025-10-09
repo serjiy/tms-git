@@ -23,9 +23,9 @@ gcc 1.c -o 1.exe
 ./1.exe
 ```
 
-## 3. Скрипт для вывода аргументов командной строки
+## 1. Скрипт для вывода аргументов командной строки
 
-**script3.sh:**
+**cmdprmtoutput.sh:**
 ```bash
 #!/bin/bash
 
@@ -42,9 +42,9 @@ done
 echo "Аргументы сохранены в файл output.txt"
 ```
 
-## 4. Скрипт для поиска файлов по расширению
+## 2. Скрипт для поиска файлов по расширению
 
-**script4.sh:**
+**extsrch.sh:**
 ```bash
 #!/bin/bash
 
@@ -68,11 +68,9 @@ echo "Результаты сохранены в файл: $output_file"
 echo "Найдено файлов: $(wc -l < "$output_file")"
 ```
 
-## Опционально:
+## 3. Скрипт с циклом for для вывода информации о файлах
 
-### 1. Скрипт с циклом for для вывода информации о файлах
-
-**optional1.sh:**
+**infoutput.sh:**
 ```bash
 #!/bin/bash
 
@@ -91,9 +89,9 @@ find "$directory" -type f -exec ls -lh {} \; 2>/dev/null | while read line; do
 done
 ```
 
-### 2. Скрипт для поиска строки в файлах
+## 4. Скрипт для поиска строки в файлах
 
-**optional2.sh:**
+**linesrch.sh:**
 ```bash
 #!/bin/bash
 
@@ -133,23 +131,21 @@ rm -f /tmp/access_errors
 
 1. **Сделать все скрипты исполняемыми:**
 ```bash
-chmod +x script3.sh script4.sh optional1.sh optional2.sh
+chmod +x cmdprmtoutput.sh  extsrch.sh  infoutput.sh  linesrch.sh
 ```
 
 2. **Примеры использования скриптов:**
 
 ```bash
-# Скрипт 3 - вывод аргументов
-./script3.sh arg1 arg2 arg3
+# скрипт cmdprmtoutput.sh - вывод аргументов
+./cmdprmtoutput.sh arg1 arg2 arg3
 
-# Скрипт 4 - поиск файлов по расширению
-./script4.sh result.txt /home/user txt
+# скрипт extsrch.sh - поиск файлов по расширению
+./extsrch.sh result.txt /home/user txt
 
-# Опциональный скрипт 1 - информация о файлах
+# скрипт infoutput.sh - информация о файлах
 ./optional1.sh /home/user
 
-# Опциональный скрипт 2 - поиск строки
+# скрипт linesrch.sh - поиск строки
 ./optional2.sh "hello world" /home/user
 ```
-
-Все скрипты включают проверку аргументов и обработку ошибок для надежной работы.
