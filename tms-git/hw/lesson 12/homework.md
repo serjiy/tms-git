@@ -144,8 +144,8 @@ chmod +x cmdprmtoutput.sh  extsrch.sh  infoutput.sh  linesrch.sh
 ./extsrch.sh result.txt /home/user txt
 
 # скрипт infoutput.sh - информация о файлах
-./optional1.sh /home/user
+./infoutput.sh /home/user
 
-# скрипт linesrch.sh - поиск строки
-./optional2.sh "hello world" /home/user
+# скрипт linesrch.sh - поиск строкиoptional2.sh
+./linesrch.sh "hello world" /home/user
 ```
