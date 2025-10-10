@@ -76,13 +76,13 @@ chmod +x word_counter.sh log_renamer.sh py_committer.sh duplicate_fixer.sh
 
 # Функции
 
-# Задача 1: Подсчёт слов
+# Подсчёт слов:
 count_words() {
     echo "=== Подсчёт слов в тексте ==="
     grep -o -E "[[:alpha:]]+(-[[:alpha:]]+)*" | wc -l
 }
 
-# Задача 2.1: Переименование .log файлов
+# Переименование .log файлов:
 rename_logs() {
     echo "=== Переименование .log файлов ==="
     for f in *.log; do
@@ -94,7 +94,7 @@ rename_logs() {
     done
 }
 
-# Задача 2.2: Переименование .py файлов
+# Переименование .py файлов:
 rename_py() {
     echo "=== Переименование .py файлов ==="
     if ! git rev-parse --git-dir > /dev/null 2>&1; then
@@ -111,7 +111,7 @@ rename_py() {
     done
 }
 
-# Задача 3: Исправление повторов
+# Исправление повторов:
 fix_repeats() {
     echo "=== Исправление повторяющихся слов ==="
     sed -E 's/\b([[:alpha:]]+(-[[:alpha:]]+)*)[[:space:]]+\1\b/\1/g'
