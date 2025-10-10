@@ -71,8 +71,6 @@ chmod +x word_counter.sh log_renamer.sh py_committer.sh duplicate_fixer.sh
 
 ## 5. 'text_processor.sh' - все функции в одном файле
 
-Использование **text_processor.sh**, объединяющего все функции в одном файле:
-
 ```bash
 #!/bin/bash
 
