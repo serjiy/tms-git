@@ -1,46 +1,34 @@
 #!/bin/bash
 
-# user_manage.sh — управление пользователями и группами
-
-set -euo pipefail  # Безопасный режим
+set -euo pipefail
 
 # Цвета для вывода
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 # Конфигурация
 readonly USER_FILE="/var/users"
 readonly LOG_FILE="/var/log/user_manage.log"
 
 # Проверка root
-check_root() {
-    if [[ $EUID -ne 0 ]]; then
-        echo -e "${RED}Ошибка: Этот скрипт должен запускаться от root.${NC}" >&2
-        exit 1
-    fi
-}
+if [[ $EUID -ne 0 ]]; then
+    echo -e "${RED}Ошибка: Этот скрипт должен запускаться от root.${NC}" >&2
+    exit 1
+fi
 
 # Логирование
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" | tee -a "$LOG_FILE"
 }
 
-# Проверка существования пользователя
-user_exists() {
-    id "$1" &>/dev/null
-}
-
-# Проверка существования группы
-group_exists() {
-    getent group "$1" &>/dev/null
-}
-
 # Функция создания пользователя и группы
 create_user() {
     local username="$1"
     local groupname="$2"
+    
+    echo "Создаем пользователя: $username в группе: $groupname"
     
     # Валидация входных данных
     if [[ -z "$username" || -z "$groupname" ]]; then
@@ -49,13 +37,13 @@ create_user() {
     fi
     
     # Проверка существования пользователя
-    if user_exists "$username"; then
+    if id "$username" &>/dev/null; then
         log "Пользователь $username уже существует"
         return 0
     fi
     
     # Создание группы если не существует
-    if ! group_exists "$groupname"; then
+    if ! getent group "$groupname" &>/dev/null; then
         if groupadd "$groupname"; then
             log "Группа $groupname создана"
         else
@@ -78,107 +66,50 @@ create_user() {
 
 # Массовое добавление из файла
 batch_create() {
+    echo "Начинаем обработку файла $USER_FILE"
+    
     local count=0
     local success=0
     
-    if [[ ! -f "$USER_FILE" ]]; then
-        echo -e "${RED}Файл $USER_FILE не найден${NC}" >&2
-        return 1
-    fi
-    
-    if [[ ! -s "$USER_FILE" ]]; then
-        echo -e "${YELLOW}Файл $USER_FILE пуст${NC}" >&2
-        return 1
-    fi
-    
-    log "Начало массового создания пользователей из $USER_FILE"
-    
-    local oldIFS=$IFS
-    local line_count=0
-    
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        ((line_count++))
+    while IFS= read -r line; do
+        ((count++))
+        echo "Обрабатываем строку $count: $line"
         
         # Пропуск пустых строк и комментариев
-        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+        if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
+            echo "Пропускаем строку (пустая или комментарий)"
+            continue
+        fi
         
         # Разбор строки
-        local user group
         user=$(echo "$line" | awk '{print $1}')
         group=$(echo "$line" | awk '{print $2}')
         
+        echo "Разобрано: пользователь='$user', группа='$group'"
+        
         if [[ -z "$user" || -z "$group" ]]; then
-            log "Ошибка в строке $line_count: некорректный формат"
+            echo "Ошибка: некорректный формат строки"
             continue
         fi
         
         if create_user "$user" "$group"; then
             ((success++))
         fi
-        ((count++))
+        echo "---"
         
     done < "$USER_FILE"
     
-    IFS=$oldIFS
-    
-    log "Массовое создание завершено: $success/$count пользователей создано успешно"
     echo -e "${GREEN}Создано пользователей: $success/$count${NC}"
+    log "Массовое создание завершено: $success/$count пользователей создано успешно"
 }
 
-# Показать созданных пользователей
-show_users() {
-    echo -e "\n${YELLOW}Список пользователей системы:${NC}"
-    cut -d: -f1 /etc/passwd | sort | column
-}
+# Основной сценарий
+echo -e "${YELLOW}Скрипт управления пользователями запущен${NC}"
+log "Запуск скрипта"
 
-# Интерактивное меню
-interactive_menu() {
-    while true; do
-        echo -e "\n${YELLOW}=== Меню управления пользователями ===${NC}"
-        PS3="Выберите опцию (1-3): "
-        select option in "Добавить пользователя" "Показать всех пользователей" "Выход"; do
-            case $REPLY in
-                1)
-                    echo
-                    read -p "Введите имя пользователя: " uname
-                    read -p "Введите имя группы: " gname
-                    create_user "$uname" "$gname"
-                    break
-                    ;;
-                2)
-                    show_users
-                    break
-                    ;;
-                3)
-                    echo -e "${GREEN}Выход...${NC}"
-                    exit 0
-                    ;;
-                *)
-                    echo -e "${RED}Неверный выбор. Выберите 1, 2 или 3.${NC}"
-                    break
-                    ;;
-            esac
-        done
-    done
-}
-
-# Основная функция
-main() {
-    check_root
-    
-    echo -e "${YELLOW}Скрипт управления пользователями запущен${NC}"
-    log "Запуск скрипта"
-    
-    if [[ -f "$USER_FILE" && -s "$USER_FILE" ]]; then
-        batch_create
-    else
-        echo -e "${YELLOW}Файл $USER_FILE не найден или пуст. Запуск интерактивного режима.${NC}"
-        interactive_menu
-    fi
-}
-
-# Обработка сигналов
-trap 'log "Скрипт прерван"; exit 1' INT TERM
-
-# Запуск основной функции
-main "$@"
+if [[ -f "$USER_FILE" && -s "$USER_FILE" ]]; then
+    batch_create
+else
+    echo -e "${YELLOW}Файл $USER_FILE не найден или пуст${NC}"
+    exit 1
+fi
