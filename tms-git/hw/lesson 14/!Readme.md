@@ -129,10 +129,10 @@ useradd -m -g "$group" -s "/bin/bash" -c "Automatically created" "$user"
 ## Формат файла пользователей
 
 Файл `/var/users` должен содержать пары `username group` в каждой строке:
-```
+
 alice staff
 bob admins
-```
+
 
 ---
 
