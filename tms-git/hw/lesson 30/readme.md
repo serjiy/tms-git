@@ -1,40 +1,68 @@
-# Домашнее задание №30 — Jenkins Pipeline
+# Домашнее задание № 30 — Jenkins Pipeline
 
-Для выполнения задания был установлен Jenkins на Windows через Docker Desktop. 
-Использована связка из основного контейнера jenkins/jenkins:lts-jdk17 и docker-in-docker для поддержки Docker-команд. 
-На Windows возникли небольшие сложности с совместимостью bat/sh-скриптов.
+## Описание
 
-Создано два пайплайна:
-- declarative — для демонстрации базовых этапов, параметров, условий и обработки ошибок
-- scripted (Groovy) — для симуляции автоматизации сборки и развёртывания веб-приложения с Docker
+Для выполнения задания был установлен **Jenkins** на Windows через **Docker Desktop**.
 
-Использован мой репозиторий: https://github.com/serjiy/tms-git (ветка main)
+Использована связка из:
+- основного контейнера `jenkins/jenkins:lts-jdk17`;
+- `docker‑in‑docker` (для поддержки Docker‑команд).
+
+**Особенности:**  
+На Windows возникли небольшие сложности с совместимостью `bat`/ `sh`-скриптов.
+
+Создано **два пайплайна**:
+- **Declarative** — для демонстрации базовых этапов, параметров, условий и обработки ошибок;
+- **Scripted** (Groovy) — для симуляции автоматизации сборки и развёртывания веб‑приложения с Docker.
+
+**Репозиторий:**  
+https://github.com/serjiy/tms-git (ветка `main`).
+
+---
 
 ## Установка Jenkins
 
-Команды запуска (PowerShell):
+### Команды запуска (PowerShell)
 
-1. Создание сети:  
-   `docker network create jenkins`
+1. **Создание сети:**  
+   ```powershell
+   docker network create jenkins
+   ```
 
-2. Запуск docker-in-docker:  
-   `docker run --name jenkins-docker --rm --detach --privileged --network jenkins --network-alias docker --volume jenkins-data:/var/jenkins_home --publish 2375:2375 docker:dind`
+2. **Запуск docker‑in‑docker:**  
+   ```powershell
+   docker run --name jenkins-docker --rm --detach --privileged --network jenkins --network-alias docker --volume jenkins-data:/var/jenkins_home --publish 2375:2375 docker:dind
+   ```
 
-3. Запуск Jenkins:  
-   `docker run --name jenkins --rm --detach --network jenkins --env DOCKER_HOST=tcp://docker:2375 --publish 8080:8080 --publish 50000:50000 --volume jenkins-data:/var/jenkins_home jenkins/jenkins:lts-jdk17`
+3. **Запуск Jenkins:**  
+   ```powershell
+   docker run --name jenkins --rm --detach --network jenkins --env DOCKER_HOST=tcp://docker:2375 --publish 8080:8080 --publish 50000:50000 --volume jenkins-packed:/var/jenkins_home jenkins/jenkins:lts-jdk17
+   ```
 
-После запуска Jenkins доступен на http://localhost:8080 
+**После запуска** Jenkins доступен по адресу:  
+`http://localhost:8080`
 
-## Declarative Pipeline (HW30-Demo-Pipeline)
+---
 
-Пайплайн клонирует репозиторий, выводит структуру папки hw, опционально проверяет синтаксис Python-файлов в указанном уроке и выполняет условный echo на ветке main. Параметры: номер урока и флаг проверки синтаксиса. Обработка ошибок через post-блок.
+## Declarative Pipeline (HW30‑Demo‑Pipeline)
 
-### Код скрипта 
+Пайплайн:
+- клонирует репозиторий;
+- выводит структуру папки `hw`;
+- опционально проверяет синтаксис Python‑файлов в указанном уроке;
+- выполняет условный `echo` на ветке `main`.
+
+**Параметры:**
+- `LESSON_NUMBER` — номер урока для проверки (например, `13`, `28` и т. д.);
+- `CHECK_PYTHON_SYNTAX` — флаг запуска проверки синтаксиса Python (требует `python` в агенте).
+
+**Обработка ошибок** реализована через блок `post`.
+
+### Код declarative пайплайна
 
 ```groovy
 pipeline {
     agent any
-
     parameters {
         string(
             name: 'LESSON_NUMBER',
@@ -47,7 +75,6 @@ pipeline {
             description: 'Запускать проверку синтаксиса Python? (требует python в агенте)'
         )
     }
-
     stages {
         stage('Clone Repository') {
             steps {
@@ -55,14 +82,12 @@ pipeline {
                     url: 'https://github.com/serjiy/tms-git.git'
             }
         }
-
         stage('Show Structure') {
             steps {
                 sh 'ls -laR tms-git/hw'
                 echo "Репозиторий склонирован. Папка hw содержит ~20 уроков (Lesson 13, lesson 28 и т.д.)."
             }
         }
-
         stage('Check Python Syntax') {
             when {
                 expression { params.CHECK_PYTHON_SYNTAX == true }
@@ -71,7 +96,6 @@ pipeline {
                 script {
                     def lessonFolder = "lesson ${params.LESSON_NUMBER.toLowerCase()}"
                     def lessonPath = "tms-git/hw/${lessonFolder}"
-
                     if (fileExists(lessonPath)) {
                         echo "Проверяем синтаксис в ${lessonPath}"
                         sh """
@@ -84,7 +108,6 @@ pipeline {
                 }
             }
         }
-
         stage('Conditional Echo (only on main)') {
             when {
                 branch 'main'
@@ -97,7 +120,6 @@ pipeline {
             }
         }
     }
-
     post {
         always {
             echo 'Pipeline завершён (успешно или с ошибкой)'
@@ -110,19 +132,25 @@ pipeline {
         }
     }
 }
+```
 
-## Scripted Pipeline с Docker (HW30-Docker-Deploy)
+---
 
-Этот пайплайн написан в scripted-стиле (node + Groovy) и имитирует полный цикл CI/CD для простого веб-приложения:  
-- клонирование репозитория  
-- симуляция сборки  
-- симуляция создания Docker-образа  
-- развёртывание контейнера с удалением предыдущей версии   
-- проверка доступности приложения  
+## Scripted Pipeline с Docker (HW30‑Docker‑Deploy)
 
-Реальные команды `docker` заменены на `echo`, потому что в образе Jenkins нет установленного docker-клиента. Логика полностью сохранена, а ошибки обрабатываются через try-catch + finally.
+Пайплайн написан в **scripted‑стиле** (`node` + Groovy) и имитирует полный цикл **CI/CD** для простого веб‑приложения:
+- клонирование репозитория;
+- симуляция сборки;
+- симуляция создания Docker‑образа;
+- развёртывание контейнера с удалением предыдущей версии;
+- проверка доступности приложения.
 
-### Код скрипта
+**Особенности:**
+- Реальные команды `docker` заменены на `echo` (в образе Jenkins нет установленного Docker‑клиента).
+- Логика полностью сохранена.
+- Ошибки обрабатываются через `try‑catch` + `finally`.
+
+### Код scripted пайплайна
 
 ```groovy
 node {
@@ -130,12 +158,10 @@ node {
         stage('Clone repository') {
             git branch: 'main', url: 'https://github.com/serjiy/tms-git.git'
         }
-
         stage('Build application') {
             sh 'echo "Симуляция сборки приложения (Maven/Gradle отсутствует в репо)"'
             sh 'ls -la tms-git/hw || echo "Папка hw не найдена"'
         }
-
         stage('Create Docker image') {
             sh '''
                 echo "Симуляция создания Docker-образа:"
@@ -147,7 +173,6 @@ node {
                 echo "docker build -t my-web-app:latest tms-git/hw/myapp"
             '''
         }
-
         stage('Deploy Docker container') {
             sh '''
                 echo "Удаление предыдущей версии контейнера (доп. задание):"
@@ -159,7 +184,6 @@ node {
                 echo "(в реальности заменить nginx на свой образ)"
             '''
         }
-
         stage('Check application') {
             sh '''
                 echo "Симуляция проверки доступности:"
@@ -176,7 +200,14 @@ node {
         sh 'echo "Очистка (симуляция): docker stop/rm my-web-app-container"'
     }
 }
+```
 
-### Скриншоты результатов Build
-HW30-Docker-Deploy
-HW30-Demo-Pipeline (для проверки выбран урок № 28, содержащий файл *.py)
+---
+
+## Скриншоты результатов Build
+
+- **HW30‑Docker‑Deploy** (успешный билд # 3)  
+  HW30‑Docker‑Deploy Stage View
+
+- **HW30‑Demo‑Pipeline** (проверка урока № 28 с файлом `*.py`)  
+  HW30‑Demo‑Pipeline Stage View
