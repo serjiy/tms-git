@@ -1,0 +1,15 @@
+FROM jenkins/inbound-agent:latest-jdk21
+
+USER root
+
+# Установка Maven 3.9.12
+RUN apt-get update && \
+    apt-get install -y wget unzip && \
+    wget https://dlcdn.apache.org/maven/maven-3/3.9.12/binaries/apache-maven-3.9.12-bin.zip -O /tmp/maven.zip && \
+    unzip /tmp/maven.zip -d /opt && \
+    rm /tmp/maven.zip && \
+    ln -s /opt/apache-maven-3.9.12/bin/mvn /usr/bin/mvn && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+USER jenkins

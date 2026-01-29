@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  jenkins-controller:
+    image: jenkins/jenkins:lts-jdk21
+    container_name: jenkins-controller
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - jenkins-net
+
+  jenkins-agent:
+    image: my-jenkins-maven-agent:latest
+    container_name: jenkins-agent
+    restart: unless-stopped
+    environment:
+      - JENKINS_URL=http://jenkins-controller:8080
+      - JENKINS_AGENT_NAME=my-docker-agent
+      - JENKINS_SECRET=81536f5d32d906372a72671fdbef73abb28b6ef45a7dc553238dea0c79324690  # ← ТВОЙ SECRET из UI (скопируй заново, если сомневаешься!)
+      - JENKINS_WEB_SOCKET=true
+      - AGENT_WORKDIR=/home/jenkins/agent
+    volumes:
+      - agent_workspace:/home/jenkins/agent
+    depends_on:
+      - jenkins-controller
+    networks:
+      - jenkins-net
+
+volumes:
+  jenkins_home:
+  agent_workspace:
+
+networks:
+  jenkins-net:
+    driver: bridge
