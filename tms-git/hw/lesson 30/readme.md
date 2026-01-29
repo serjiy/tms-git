@@ -206,8 +206,5 @@ node {
 
 ## Скриншоты результатов Build
 
-- **HW30‑Docker‑Deploy** (успешный билд # 3)  
-  HW30‑Docker‑Deploy Stage View
-
+- **HW30‑Docker‑Deploy**  
 - **HW30‑Demo‑Pipeline** (проверка урока № 28 с файлом `*.py`)  
-  HW30‑Demo‑Pipeline Stage View
