@@ -92,7 +92,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo "Скачиваем код из GitHub..."
+                echo "Скачивает код из GitHub..."
                 git url: 'https://github.com/jenkins-docs/simple-java-maven-app.git',
                     branch: 'master'
             }
