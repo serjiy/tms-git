@@ -1,0 +1,1 @@
+Домашнее задание № 32: https://github.com/serjiy/weather-app.git
