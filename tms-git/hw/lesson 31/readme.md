@@ -1,4 +1,4 @@
-# Лабораторная работа: Настройка агента Jenkins в Docker на Windows 11
+# Домашняя работа №31: Настройка агента Jenkins в Docker на Windows 11
 
 **Выполненные задачи**
 
@@ -26,6 +26,10 @@
   ```groovy
   git url: 'https://github.com/jenkins-docs/simple-java-maven-app.git', branch: 'master'
   ```
+# Репозиторий выбран по нескольим причинам:
+# Команда Jenkins рекомендует в своей документации для туториалов по Pipeline и Maven.
+# Максимально простой и лёгкий.
+
 
 - **Build**: компиляция и упаковка JAR:
 
